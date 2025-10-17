@@ -1,3 +1,4 @@
-pythontextnow
+pythontextnow==4.1.6
 requests
-random_user_agent
+random-user-agent
+fake-useragent
