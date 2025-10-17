@@ -1,0 +1,41 @@
+name: Send SMS from TextNow
+
+on:
+  workflow_dispatch: {}   # lets you run it manually
+  schedule:
+    - cron: "*/15 * * * *"  # runs every 15 minutes
+
+permissions:
+  contents: write  # allows committing sent_state.json updates
+
+jobs:
+  run-sender:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          TEXTNOW_USERNAME: ${{ secrets.TEXTNOW_USERNAME }}
+          TEXTNOW_SID_COOKIE: ${{ secrets.TEXTNOW_SID_COOKIE }}
+          SHEET_CSV_URL: ${{ secrets.SHEET_CSV_URL }}
+        run: python send_sms.py
+
+      - name: Commit updated state
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add sent_state.json
+            git commit -m "Update sent_state.json [skip ci]"
+            git push
+          fi
